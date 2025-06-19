@@ -107,6 +107,8 @@ VectorFunctionLinearApproximation EndEffectorConstraint::getLinearApproximation(
 auto EndEffectorConstraint::interpolateEndEffectorPose(scalar_t time) const -> std::pair<vector_t, quaternion_t> {
   const auto& targetTrajectories = referenceManagerPtr_->getTargetTrajectories();
   const auto& timeTrajectory = targetTrajectories.timeTrajectory;
+  // [zmh]此处的期望轨迹，是指期望的末端轨迹，它由离散的轨迹点组成，再通过线性插值计算任意时刻的位姿
+  // 且位姿由四元数表示，前3个元素表示位置，后四个表示四元数的姿态。
   const auto& stateTrajectory = targetTrajectories.stateTrajectory;
 
   vector_t position;

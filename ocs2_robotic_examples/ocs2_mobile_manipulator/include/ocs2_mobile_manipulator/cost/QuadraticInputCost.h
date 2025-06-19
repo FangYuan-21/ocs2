@@ -44,8 +44,10 @@ class QuadraticInputCost final : public QuadraticStateInputCost {
   QuadraticInputCost(const QuadraticInputCost& rhs) = default;
   QuadraticInputCost* clone() const override { return new QuadraticInputCost(*this); }
 
+  // [zmh]这里返回当前时刻 @p time 的状态误差(x-x_d)和输入误差(u-u_d)
   std::pair<vector_t, vector_t> getStateInputDeviation(scalar_t time, const vector_t& state, const vector_t& input,
                                                        const TargetTrajectories& targetTrajectories) const override {
+    // 当前时刻的输入是通过线性插值计算得到的
     const vector_t inputDeviation = input - targetTrajectories.getDesiredInput(time);
     return {vector_t::Zero(stateDim_), inputDeviation};
   }

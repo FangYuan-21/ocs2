@@ -147,6 +147,7 @@ MobileManipulatorInterface::MobileManipulatorInterface(const std::string& taskFi
   loadData::loadEigenMatrix(taskFile, "initialState.arm", initialArmState);
   initialState_.tail(armStateDim) = initialArmState;
 
+  // [zmh]前面的是base的状态，后面的是arm的状态
   std::cerr << "Initial State:   " << initialState_.transpose() << std::endl;
 
   // DDP-MPC settings
@@ -232,6 +233,7 @@ std::unique_ptr<StateInputCost> MobileManipulatorInterface::getQuadraticInputCos
   if (baseInputDim > 0) {
     matrix_t R_base = matrix_t::Zero(baseInputDim, baseInputDim);
     loadData::loadEigenMatrix(taskFile, "inputCost.R.base." + modelTypeEnumToString(manipulatorModelInfo_.manipulatorModelType), R_base);
+    // [zmh]输入u的顺序是[u_base, u_arm]^T, 所以对R，左上角是R_base, 右下角是R_arm.
     R.topLeftCorner(baseInputDim, baseInputDim) = R_base;
   }
 
@@ -273,7 +275,11 @@ std::unique_ptr<StateCost> MobileManipulatorInterface::getEndEffectorConstraint(
 
   std::unique_ptr<StateConstraint> constraint;
   if (usePreComputation) {
+    // todo [zmh] 这里将Jq, Jv映射成OCS2中使用的dfdx, dfdu，这个映射每看懂
     MobileManipulatorPinocchioMapping pinocchioMapping(manipulatorModelInfo_);
+    // [zmh] 这里需要利用pinocchio来计算机器人的末端位置以及雅可比矩阵，所以要设置pinocchio中维护的model中的关节位置和速度，
+    // 所以要将x--state和u--input映射为pinocchio对于的关节位置和速度
+    // [zmh] 这里采用pinocchio实现末端的运动学
     PinocchioEndEffectorKinematics eeKinematics(pinocchioInterface, pinocchioMapping, {manipulatorModelInfo_.eeFrame});
     constraint.reset(new EndEffectorConstraint(eeKinematics, *referenceManagerPtr_));
   } else {
@@ -316,6 +322,7 @@ std::unique_ptr<StateCost> MobileManipulatorInterface::getSelfCollisionConstrain
   loadData::loadStdVectorOfPair(taskFile, prefix + ".collisionLinkPairs", collisionLinkPairs, true);
   std::cerr << " #### =============================================================================\n";
 
+  // [zmh] 这里是定义碰撞对的信息，并通过这个对象能计算得到当前状态下各个碰撞对的距离
   PinocchioGeometryInterface geometryInterface(pinocchioInterface, collisionLinkPairs, collisionObjectPairs);
 
   const size_t numCollisionPairs = geometryInterface.getNumCollisionPairs();

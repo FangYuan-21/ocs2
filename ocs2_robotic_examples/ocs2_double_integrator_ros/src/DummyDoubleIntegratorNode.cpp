@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ocs2_double_integrator_ros/DoubleIntegratorDummyVisualization.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   const std::string robotName = "double_integrator";
 
   // task file
@@ -54,9 +54,12 @@ int main(int argc, char** argv) {
   ros::NodeHandle nodeHandle;
 
   // Robot interface
-  const std::string taskFile = ros::package::getPath("ocs2_double_integrator") + "/config/" + taskFileFolderName + "/task.info";
-  const std::string libFolder = ros::package::getPath("ocs2_double_integrator") + "/auto_generated";
-  ocs2::double_integrator::DoubleIntegratorInterface doubleIntegratorInterface(taskFile, libFolder);
+  const std::string taskFile = ros::package::getPath("ocs2_double_integrator") +
+                               "/config/" + taskFileFolderName + "/task.info";
+  const std::string libFolder =
+      ros::package::getPath("ocs2_double_integrator") + "/auto_generated";
+  ocs2::double_integrator::DoubleIntegratorInterface doubleIntegratorInterface(
+      taskFile, libFolder);
 
   // MRT
   ocs2::MRT_ROS_Interface mrt(robotName);
@@ -64,22 +67,27 @@ int main(int argc, char** argv) {
   mrt.launchNodes(nodeHandle);
 
   // Visualization
-  auto doubleIntegratorDummyVisualization = std::make_shared<ocs2::double_integrator::DoubleIntegratorDummyVisualization>(nodeHandle);
+  auto doubleIntegratorDummyVisualization = std::make_shared<
+      ocs2::double_integrator::DoubleIntegratorDummyVisualization>(nodeHandle);
 
   // Dummy loop
-  ocs2::MRT_ROS_Dummy_Loop dummyDoubleIntegrator(mrt, doubleIntegratorInterface.mpcSettings().mrtDesiredFrequency_,
-                                                 doubleIntegratorInterface.mpcSettings().mpcDesiredFrequency_);
-  dummyDoubleIntegrator.subscribeObservers({doubleIntegratorDummyVisualization});
+  ocs2::MRT_ROS_Dummy_Loop dummyDoubleIntegrator(
+      mrt, doubleIntegratorInterface.mpcSettings().mrtDesiredFrequency_,
+      doubleIntegratorInterface.mpcSettings().mpcDesiredFrequency_);
+  dummyDoubleIntegrator.subscribeObservers(
+      {doubleIntegratorDummyVisualization});
 
   // initial state
   ocs2::SystemObservation initObservation;
   initObservation.time = 0.0;
   initObservation.state = doubleIntegratorInterface.getInitialState();
-  initObservation.input = ocs2::vector_t::Zero(ocs2::double_integrator::INPUT_DIM);
+  initObservation.input =
+      ocs2::vector_t::Zero(ocs2::double_integrator::INPUT_DIM);
 
   // initial command
-  const ocs2::TargetTrajectories initTargetTrajectories({0.0}, {doubleIntegratorInterface.getInitialTarget()},
-                                                        {ocs2::vector_t::Zero(ocs2::double_integrator::INPUT_DIM)});
+  const ocs2::TargetTrajectories initTargetTrajectories(
+      {0.0}, {doubleIntegratorInterface.getInitialTarget()},
+      {ocs2::vector_t::Zero(ocs2::double_integrator::INPUT_DIM)});
 
   // Run dummy (loops while ros is ok)
   dummyDoubleIntegrator.run(initObservation, initTargetTrajectories);

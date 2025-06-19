@@ -88,6 +88,7 @@ void MobileManipulatorDummyVisualization::launchVisualizerNode(ros::NodeHandle& 
     ROS_ERROR("Failed to extract kdl tree from xml robot description");
   }
 
+  // [zmh] 从 JointState 计算并发布 tf 坐标变换，表示机器人每个关节和连杆之间的位置关系。
   robotStatePublisherPtr_.reset(new robot_state_publisher::RobotStatePublisher(tree));
   robotStatePublisherPtr_->publishFixedTransforms(true);
 
@@ -114,6 +115,7 @@ void MobileManipulatorDummyVisualization::launchVisualizerNode(ros::NodeHandle& 
     loadData::loadStdVectorOfPair(taskFile, "selfCollision.collisionObjectPairs", collisionObjectPairs, true);
     PinocchioGeometryInterface geomInterface(pinocchioInterface, collisionObjectPairs);
     // set geometry visualization markers
+    // [zmh] 这里能够可视化自碰撞的距离
     geometryVisualization_.reset(new GeometryInterfaceVisualization(std::move(pinocchioInterface), geomInterface, nodeHandle));
   }
 }
@@ -126,9 +128,13 @@ void MobileManipulatorDummyVisualization::update(const SystemObservation& observ
   const ros::Time timeStamp = ros::Time::now();
 
   publishObservation(timeStamp, observation);
+  // [zmh] 这里应该是发布给mpc求解的目标轨迹
   publishTargetTrajectories(timeStamp, command.mpcTargetTrajectories_);
+  // [zmh] 这里应该是发布优化后的末端轨迹(只有位置)，以及base的位置和姿态轨迹。
   publishOptimizedTrajectory(timeStamp, policy);
   if (geometryVisualization_ != nullptr) {
+    // [zmh] 这里发布碰撞距离信息，包括碰撞对及最近点信息，用箭头指向碰撞对
+    // 如果有多个碰撞对的话，每个碰撞对的信息都会显示，所以一旦碰撞对多了以后显示信息会很杂乱
     geometryVisualization_->publishDistances(observation.state);
   }
 }
@@ -138,6 +144,7 @@ void MobileManipulatorDummyVisualization::update(const SystemObservation& observ
 /******************************************************************************************************/
 void MobileManipulatorDummyVisualization::publishObservation(const ros::Time& timeStamp, const SystemObservation& observation) {
   // publish world -> base transform
+  // [zmh] 这里计算机器人base相对于world之间的其次变换关系
   const auto r_world_base = getBasePosition(observation.state, modelInfo_);
   const Eigen::Quaternion<scalar_t> q_world_base = getBaseOrientation(observation.state, modelInfo_);
 
@@ -147,6 +154,7 @@ void MobileManipulatorDummyVisualization::publishObservation(const ros::Time& ti
   base_tf.child_frame_id = modelInfo_.baseFrame;
   base_tf.transform.translation = ros_msg_helpers::getVectorMsg(r_world_base);
   base_tf.transform.rotation = ros_msg_helpers::getOrientationMsg(q_world_base);
+  // [zmh] 这里发布base的tf
   tfBroadcaster_.sendTransform(base_tf);
 
   // publish joints transforms
@@ -202,6 +210,7 @@ void MobileManipulatorDummyVisualization::publishOptimizedTrajectory(const ros::
 
   std::vector<geometry_msgs::Point> endEffectorTrajectory;
   endEffectorTrajectory.reserve(mpcStateTrajectory.size());
+  // [zmh] mpc计算输出的mpcStateTrajectory是关节位置的序列，用其更新pinocchio中的模型数据，进而查询得到机器人末端的位姿
   std::for_each(mpcStateTrajectory.begin(), mpcStateTrajectory.end(), [&](const Eigen::VectorXd& state) {
     pinocchio::forwardKinematics(model, data, state);
     pinocchio::updateFramePlacements(model, data);

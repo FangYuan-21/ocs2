@@ -249,6 +249,7 @@ void MPC_ROS_Interface::mpcObservationCallback(const ocs2_msgs::mpc_observation:
   mpcTimer_.startTimer();
 
   // run MPC
+  // [zmh] 这里根据当前状态来求解一次mpc问题
   bool controllerIsUpdated = mpc_.run(currentObservation.time, currentObservation.state);
   if (!controllerIsUpdated) {
     return;
@@ -256,6 +257,7 @@ void MPC_ROS_Interface::mpcObservationCallback(const ocs2_msgs::mpc_observation:
   copyToBuffer(currentObservation);
 
   // measure the delay for sending ROS messages
+  // [zmh] 截止到这，能计算出求解一次mpc问题所需的时间，同时这里阻塞也会影响状态数据的获取
   mpcTimer_.endTimer();
 
   // check MPC delay and solution window compatibility

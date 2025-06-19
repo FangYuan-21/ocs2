@@ -44,46 +44,53 @@ namespace ocs2 {
  * This class lets the user to insert robot command form command line.
  */
 class TargetTrajectoriesKeyboardPublisher final {
- public:
-  using CommandLineToTargetTrajectories =
-      std::function<TargetTrajectories(const vector_t& commadLineTarget, const SystemObservation& observation)>;
+public:
+  using CommandLineToTargetTrajectories = std::function<TargetTrajectories(
+      const vector_t &commadLineTarget, const SystemObservation &observation)>;
 
   /**
    * Constructor
    *
    * @param [in] nodeHandle: ROS node handle.
-   * @param [in] topicPrefix: The TargetTrajectories will be published on "topicPrefix_mpc_target" topic. Moreover, the latest
-   * observation is be expected on "topicPrefix_mpc_observation" topic.
-   * @param [in] targetCommandLimits: The limits of the loaded command from command-line (for safety purposes).
-   * @param [in] commandLineToTargetTrajectoriesFun: A function which transforms the command line input to TargetTrajectories.
+   * @param [in] topicPrefix: The TargetTrajectories will be published on
+   * "topicPrefix_mpc_target" topic. Moreover, the latest observation is be
+   * expected on "topicPrefix_mpc_observation" topic.
+   * @param [in] targetCommandLimits: The limits of the loaded command from
+   * command-line (for safety purposes).
+   * @param [in] commandLineToTargetTrajectoriesFun: A function which transforms
+   * the command line input to TargetTrajectories.
    */
-  TargetTrajectoriesKeyboardPublisher(::ros::NodeHandle& nodeHandle, const std::string& topicPrefix,
-                                      const scalar_array_t& targetCommandLimits,
-                                      CommandLineToTargetTrajectories commandLineToTargetTrajectoriesFun);
+  TargetTrajectoriesKeyboardPublisher(
+      ::ros::NodeHandle &nodeHandle, const std::string &topicPrefix,
+      const scalar_array_t &targetCommandLimits,
+      CommandLineToTargetTrajectories commandLineToTargetTrajectoriesFun);
 
   /** Gets the command vector size. */
   size_t targetCommandSize() const { return targetCommandLimits_.size(); }
 
   /**
-   * Publishes command line input. If the input command is shorter than the expected command
-   * size (targetCommandSize), the method will set the rest of the command to zero.
+   * Publishes command line input. If the input command is shorter than the
+   * expected command size (targetCommandSize), the method will set the rest of
+   * the command to zero.
    *
    * @param [in] commadMsg: Message to be displayed on screen.
    */
-  void publishKeyboardCommand(const std::string& commadMsg = "Enter command, separated by space");
+  void publishKeyboardCommand(
+      const std::string &commadMsg = "Enter command, separated by space");
 
- private:
+private:
   /** Gets the target from command line. */
   vector_t getCommandLine();
 
   const vector_t targetCommandLimits_;
   CommandLineToTargetTrajectories commandLineToTargetTrajectoriesFun_;
 
-  std::unique_ptr<TargetTrajectoriesRosPublisher> targetTrajectoriesPublisherPtr_;
+  std::unique_ptr<TargetTrajectoriesRosPublisher>
+      targetTrajectoriesPublisherPtr_;
 
   ::ros::Subscriber observationSubscriber_;
   mutable std::mutex latestObservationMutex_;
   SystemObservation latestObservation_;
 };
 
-}  // namespace ocs2
+} // namespace ocs2

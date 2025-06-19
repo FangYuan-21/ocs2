@@ -92,6 +92,11 @@ PinocchioInterface createPinocchioInterface(const std::string& robotUrdfPath, co
   const auto urdfTree = ::urdf::parseURDFFile(robotUrdfPath);
   // remove extraneous joints from urdf
   ::urdf::ModelInterfaceSharedPtr newModel = std::make_shared<::urdf::ModelInterface>(*urdfTree);
+  /**
+   * [zmh]
+   * @note 这里先从标准的urdf文件中加载机器人模型，然后根据task需要改变某些关节的属性。
+   * 这样做可以不改变urdf文件的内容，从而保持和其他模块的一致性.
+   */
   for (joint_pair_t& jointPair : newModel->joints_) {
     if (std::find(jointNames.begin(), jointNames.end(), jointPair.first) != jointNames.end()) {
       jointPair.second->type = urdf::Joint::FIXED;
@@ -105,6 +110,10 @@ PinocchioInterface createPinocchioInterface(const std::string& robotUrdfPath, co
     }
     case ManipulatorModelType::FloatingArmManipulator: {
       // add 6 DoF for the floating base
+      /**
+       * [zmh]
+       * @note 当机器人为轮式底盘和浮动基时，直接通过代码来增加关节，而不直接修改urdf文件.
+       */
       pinocchio::JointModelComposite jointComposite(2);
       jointComposite.addJoint(pinocchio::JointModelTranslation());
       jointComposite.addJoint(pinocchio::JointModelSphericalZYX());
@@ -138,10 +147,12 @@ PinocchioInterface createPinocchioInterface(const std::string& robotUrdfPath, co
 /******************************************************************************************************/
 ManipulatorModelInfo createManipulatorModelInfo(const PinocchioInterface& interface, const ManipulatorModelType& type,
                                                 const std::string& baseFrame, const std::string& eeFrame) {
+  // [zmh]这里的model是已经修改过关节的数量及属性后的model
   const auto& model = interface.getModel();
 
   ManipulatorModelInfo info;
   info.manipulatorModelType = type;
+  // [zmh]整个优化问题的状态维度直接等于nq吗？pinocchio的model.nq表示的是构型空间的维度，一般指关节的数量
   info.stateDim = model.nq;
   // resolve for actuated dof based on type of robot
   switch (type) {

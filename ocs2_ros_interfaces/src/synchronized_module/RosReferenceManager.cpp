@@ -57,6 +57,8 @@ void RosReferenceManager::subscribe(ros::NodeHandle& nodeHandle) {
   modeScheduleSubscriber_ = nodeHandle.subscribe<ocs2_msgs::mode_schedule>(topicPrefix_ + "_mode_schedule", 1, modeScheduleCallback);
 
   // TargetTrajectories
+  // [zmh] target的回调函数，这里得到targetTrajectory后，通过referenceManager的setTargetTrajectories函数
+  // 将最新的目标存到缓存中，并在下一次迭代时推入到solver中。
   auto targetTrajectoriesCallback = [this](const ocs2_msgs::mpc_target_trajectories::ConstPtr& msg) {
     auto targetTrajectories = ros_msg_conversions::readTargetTrajectoriesMsg(*msg);
     referenceManagerPtr_->setTargetTrajectories(std::move(targetTrajectories));

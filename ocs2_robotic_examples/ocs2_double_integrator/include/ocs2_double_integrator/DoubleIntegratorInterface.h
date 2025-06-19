@@ -80,6 +80,7 @@ class DoubleIntegratorInterface final : public RobotInterface {
   mpc::Settings mpcSettings_;
 
   OptimalControlProblem problem_;
+  // [zmh] ReferenceManager是用于设置和管理参考轨迹(reference trajectory)的模块
   std::shared_ptr<ReferenceManager> referenceManagerPtr_;
 
   std::unique_ptr<RolloutBase> rolloutPtr_;

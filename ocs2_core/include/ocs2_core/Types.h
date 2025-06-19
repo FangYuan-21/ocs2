@@ -74,12 +74,19 @@ using matrix_array3_t = std::vector<matrix_array2_t>;
 /**
  * Defines the linear approximation of a scalar function
  * f(x,u) = dfdx' dx + dfdu' du + f
+ * [zmh]这里是对标量函数进行一阶泰勒展开
  */
 struct ScalarFunctionLinearApproximation {
-  /** First derivative w.r.t state */
+  /** First derivative w.r.t state 
+   * [zmh]这是f对x的梯度，维度为R^n
+  */
   vector_t dfdx;
-  /** First derivative w.r.t input */
+
+  /** First derivative w.r.t input 
+   * [zmh]这是f对u的梯度，维度为R^m
+  */
   vector_t dfdu;
+  
   /** Constant term */
   scalar_t f = 0.;
 
@@ -141,18 +148,34 @@ inline ScalarFunctionLinearApproximation operator*(scalar_t scalar, ScalarFuncti
 /**
  * Defines the quadratic approximation of a scalar function
  * f(x,u) = 1/2 dx' dfdxx dx + du' dfdux dx + 1/2 du' dfduu du + dfdx' dx + dfdu' du + f
+ * [zmh]这是对标量函数进行二阶泰勒展开
  */
 struct ScalarFunctionQuadraticApproximation {
-  /** Second derivative w.r.t state */
+  /** Second derivative w.r.t state 
+   * [zmh]这是f对x的hessian矩阵，R^(nxn)
+  */
   matrix_t dfdxx;
-  /** Second derivative w.r.t input (lhs) and state (rhs) */
+
+  /** Second derivative w.r.t input (lhs) and state (rhs) 
+   * [zmh]这是f先后对u,x求偏导，R^(mxn)
+  */
   matrix_t dfdux;
-  /** Second derivative w.r.t input */
+
+  /** Second derivative w.r.t input 
+   * [zmh]这是f对u的hessian矩阵，R^(mxm)
+  */
   matrix_t dfduu;
-  /** First derivative w.r.t state */
+
+  /** First derivative w.r.t state 
+   * [zmh]这是f对x的梯度，维度为R^n
+  */
   vector_t dfdx;
-  /** First derivative w.r.t input */
+
+  /** First derivative w.r.t input 
+   * [zmh]这是f对u的梯度，维度为R^m
+  */
   vector_t dfdu;
+
   /** Constant term */
   scalar_t f = 0.;
 
@@ -232,11 +255,19 @@ inline ScalarFunctionQuadraticApproximation operator*(scalar_t scalar, ScalarFun
  * f(x,u) = dfdx dx + dfdu du + f
  */
 struct VectorFunctionLinearApproximation {
-  /** Derivative w.r.t state */
+  /** Derivative w.r.t state 
+   * [zmh]这是f对x的雅可比矩阵，R^(vxn), v是f的维度，n是状态x的维度
+  */
   matrix_t dfdx;
-  /** Derivative w.r.t input */
+
+  /** Derivative w.r.t input 
+   * [zmh]这是f对u的雅可比矩阵，R^(vxm), v是f的维度，m是状态u的维度
+  */
   matrix_t dfdu;
-  /** Constant term */
+
+  /** Constant term 
+   * [zmh]维度为R^v
+  */
   vector_t f;
 
   /** Default constructor */
@@ -289,19 +320,37 @@ std::string checkSize(int vectorDim, int stateDim, int inputDim, const VectorFun
 /**
  * Defines quadratic approximation of a vector-valued function
  * f[i](x,u) = 1/2 dx' dfdxx[i] dx + du' dfdux[i] dx + 1/2 du' dfduu[i] du + dfdx[i,:] dx + dfdu[i,:] du + f[i]
+ * [zmh]对向量函数的二阶导数是张量(tensor)，相对于对向量函数的每一行进行二阶近似(标量函数的二阶近似)
  */
 struct VectorFunctionQuadraticApproximation {
-  /** Second derivative w.r.t state */
+  /** Second derivative w.r.t state 
+   * [zmh]这是向量函数f对x的二阶导数，张量，R^(vx(nxn)), 第一维度相当于df[i]dxx, 维度为R^(nxn)
+  */
   matrix_array_t dfdxx;
-  /** Second derivative w.r.t input (lhs) and state (rhs) */
+
+  /** Second derivative w.r.t input (lhs) and state (rhs) 
+   * [zmh]这是向量函数f先后对u,x的偏导数，张量，R^(vx(mxn)), 第一维度相当于df[i]dux, 维度为R^(mxn)
+  */
   matrix_array_t dfdux;
-  /** Second derivative w.r.t input */
+
+  /** Second derivative w.r.t input 
+   * [zmh]这是向量函数f对u的二阶导数，张量，R^(vx(mxm)), 第一维度相当于df[i]duu, 维度为R^(mxm)
+  */
   matrix_array_t dfduu;
-  /** First derivative w.r.t state */
+
+  /** First derivative w.r.t state 
+   * [zmh]这是f对x的雅可比矩阵，R^(vxn), v是f的维度，n是状态x的维度
+  */
   matrix_t dfdx;
-  /** First derivative w.r.t input */
+
+  /** First derivative w.r.t input 
+   * [zmh]这是f对u的雅可比矩阵，R^(vxm), v是f的维度，m是状态u的维度
+  */
   matrix_t dfdu;
-  /** Constant term */
+
+  /** Constant term 
+   * [zmh]维度为R^v
+  */
   vector_t f;
 
   /** Default constructor */

@@ -63,9 +63,11 @@ int main(int argc, char** argv) {
   rosReferenceManagerPtr->subscribe(nodeHandle);
 
   // MPC
+  // [zmh] 这里根据相关的设置，创建一个mpc的solver
   ocs2::GaussNewtonDDP_MPC mpc(doubleIntegratorInterface.mpcSettings(), doubleIntegratorInterface.ddpSettings(),
                                doubleIntegratorInterface.getRollout(), doubleIntegratorInterface.getOptimalControlProblem(),
                                doubleIntegratorInterface.getInitializer());
+  // 一定要做这一步，把referenceManager传到solver中去，这样solver才能在每次迭代时获取最新的target
   mpc.getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
 
   // Launch MPC ROS node

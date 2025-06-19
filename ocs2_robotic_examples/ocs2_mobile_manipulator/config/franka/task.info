@@ -23,7 +23,8 @@ model_settings
 ; DDP settings
 ddp
 {
-  algorithm                       SLQ
+  ; ILQR的方法会比SLQ的方法稍微快点，求解速度提升3~4hz
+  algorithm                       ILQR ; SLQ
 
   nThreads                        3
   threadPriority                  50
@@ -76,12 +77,12 @@ rollout
 mpc
 {
   timeHorizon                     1.0   ; [s]
-  solutionTimeWindow              0.2   ; [s]
+  solutionTimeWindow              0.5   ; [s]
   coldStart                       false
   
   debugPrint                      false
 
-  mpcDesiredFrequency             100   ; [Hz]
+  mpcDesiredFrequency             -1;100   ; [Hz]
   mrtDesiredFrequency             400   ; [Hz]
 }
 
@@ -203,14 +204,22 @@ finalEndEffector
 selfCollision
 { 
   ; activate self-collision constraint
-  activate  true
+  ; 打开自避障，求解频率在5hz左右，关闭避障能到20hz左右
+  activate  false ;true
 
   ; Self Collision raw object pairs
+  ; 这里相当于直接指定urdf模型中哪些object作为碰撞对，这里的序号必须与
+  ; pinocchio::GeometryModel::geometryObjects里的序号一致
   collisionObjectPairs
   {
+    [0] "3, 17"
+    [1] "4, 18"
   }
 
   ; Self Collision pairs
+  ; 这里是指所有以"panda_link1"为父连杆的object，以"panda_hand"为父连杆的object
+  ; 这个适用于一个刚体上有多个碰撞体的情况，比如panda_link1这个连杆是由多个碰撞球体来近似的
+  ; 这两类object的两两object互为碰撞对
   collisionLinkPairs
   {
     [0] "panda_link1, panda_hand"
